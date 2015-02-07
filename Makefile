@@ -1,6 +1,6 @@
 
 NAME_SRV = MSS_server
-SRC_SRV = server/Main.c
+SRC_SRV = server/Main.c server/TcpCheck.c
 OBJ_SRV = $(SRC_SRV:.c=.o)
 
 

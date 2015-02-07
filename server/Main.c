@@ -1,3 +1,4 @@
+#include "../config.h"
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
@@ -12,67 +13,7 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
-#define PATH_CMDLINE	"cmdline"
-#define PATH_CMDLINEl       strlen(PATH_CMDLINE)
-#define PATH_FD_SUFF	"fd"
-#define PATH_FD_SUFFl       strlen(PATH_FD_SUFF)
-#define PATH_PROC	   "/proc"
-#define PATH_PROC_X_FD      PATH_PROC "/%s/" PATH_FD_SUFF
-#define PRG_SOCKET_PFX    "socket:["
-#define PRG_SOCKET_PFXl (strlen(PRG_SOCKET_PFX))
-#define PRG_SOCKET_PFX2   "[0000]:"
-#define PRG_SOCKET_PFX2l  (strlen(PRG_SOCKET_PFX2))
-#define PROGNAME_WIDTH 20
-//#define LINE_MAX 4096
-#define PORT 2020
-
-static void extract_type_1_socket_inode(const char lname[], long * inode_p)
-{
-
-	/* If lname is of the form "socket:[12345]", extract the "12345"
-	 as *inode_p.  Otherwise, return -1 as *inode_p.
-	 */
-
-	if (strlen(lname) < PRG_SOCKET_PFXl + 3)
-		*inode_p = -1;
-	else if (memcmp(lname, PRG_SOCKET_PFX, PRG_SOCKET_PFXl))
-		*inode_p = -1;
-	else if (lname[strlen(lname) - 1] != ']')
-		*inode_p = -1;
-	else
-	{
-		char inode_str[strlen(lname + 1)]; /* e.g. "12345" */
-		const int inode_str_len = strlen(lname) - PRG_SOCKET_PFXl - 1;
-		char *serr;
-
-		strncpy(inode_str, lname + PRG_SOCKET_PFXl, inode_str_len);
-		inode_str[inode_str_len] = '\0';
-		*inode_p = strtol(inode_str, &serr, 0);
-		if (!serr || *serr || *inode_p < 0 || *inode_p >= INT_MAX)
-			*inode_p = -1;
-	}
-}
-
-static void extract_type_2_socket_inode(const char lname[], long * inode_p)
-{
-	/* If lname is of the form "[0000]:12345", extract the "12345"
-	 as *inode_p.  Otherwise, return -1 as *inode_p.
-	 */
-
-	if (strlen(lname) < PRG_SOCKET_PFX2l + 1)
-		*inode_p = -1;
-	else if (memcmp(lname, PRG_SOCKET_PFX2, PRG_SOCKET_PFX2l))
-		*inode_p = -1;
-	else
-	{
-		char *serr;
-
-		*inode_p = strtol(lname + PRG_SOCKET_PFX2l, &serr, 0);
-		if (!serr || *serr || *inode_p < 0 || *inode_p >= INT_MAX)
-			*inode_p = -1;
-	}
-}
+#include "TcpCheck.h"
 
 static void finish_this_one(int searchUid, unsigned long searchInode)
 {
@@ -89,9 +30,8 @@ static void finish_this_one(int searchUid, unsigned long searchInode)
 		return;
 	while (errno = 0, direproc = readdir(dirproc))
 	{
-#ifdef DIRENT_HAVE_D_TYPE_WORKS
-		if (direproc->d_type!=DT_DIR) continue;
-#endif
+		if (direproc->d_type != DT_DIR)
+			continue;
 		for (cs = direproc->d_name; *cs; cs++)
 			if (!isdigit(*cs))
 				break;
@@ -101,40 +41,43 @@ static void finish_this_one(int searchUid, unsigned long searchInode)
 		if (procfdlen <= 0 || procfdlen >= sizeof(line) - 5)
 			continue;
 		dirfd = opendir(line);
-		if (!dirfd)
+		if (dirfd == NULL)
 			continue;
 		line[procfdlen] = '/';
 		while ((direfd = readdir(dirfd)))
 		{
-#ifdef DIRENT_HAVE_D_TYPE_WORKS
 			if (direfd->d_type != DT_LNK)
 				continue;
-#endif
 			if (procfdlen + 1 + strlen(direfd->d_name) + 1 > sizeof(line))
 				continue;
+
 			memcpy(line + procfdlen - PATH_FD_SUFFl, PATH_FD_SUFF "/", PATH_FD_SUFFl + 1);
 			strcpy(line + procfdlen + 1, direfd->d_name);
 			lnamelen = readlink(line, lname, sizeof(lname) - 1);
 			lname[lnamelen] = '\0';
-			extract_type_1_socket_inode(lname, &inode);
-			if (inode < 0)
-				extract_type_2_socket_inode(lname, &inode);
-			if (inode < 0)
-				continue;
+
+			inode = -1;
+			if (sscanf(lname, "socket:[%ld]", &inode) == 0)
+				if (sscanf(lname, "[0000]:%ld", &inode) == 0)
+					continue;
+			printf("[%s]lname [%s] => inode[%li] // %li\n", line, lname, inode, searchInode);
+
 			if (inode == searchInode)
 			{
-				snprintf(cmdlbuf, sizeof(cmdlbuf), "/proc/%s/exe", direproc->d_name);
-				printf("Try to readfile: %s\n", cmdlbuf);
-				if (readlink(cmdlbuf, line, sizeof(line)) > 0)
+				char	tmp[2018];
+
+				snprintf(tmp, sizeof(tmp), "/proc/%s/exe", direproc->d_name);
+				printf("Try to readfile: %s\n", tmp);
+				if (readlink(tmp, line, sizeof(line)) > 0)
 					printf("APP: %s\n", line);
 			}
 		}
 		closedir(dirfd);
 		dirfd = NULL;
 	}
-	if (dirproc)
+	if (dirproc != NULL)
 		closedir(dirproc);
-	if (dirfd)
+	if (dirfd != NULL)
 		closedir(dirfd);
 }
 
@@ -158,7 +101,6 @@ static void tcp_do_one(int lnr, const char *line, int localClientPort)
 		fprintf(stderr, "warning, got bogus tcp line.\n");
 		return;
 	}
-	//printf("%d == %d ??? %s\n", local_port, localClientPort, line);
 	if (local_port == localClientPort)
 	{
 		printf("-> %s\n", line);
@@ -262,7 +204,8 @@ int main(int argc, char *argv[])
 						printf("%s: New connection from %s:%d on socket %d\n",
 								argv[0], inet_ntoa(clientaddr.sin_addr),
 								ntohs(clientaddr.sin_port), newfd);
-						tcp_do(ntohs(clientaddr.sin_port));
+						//tcp_do(ntohs(clientaddr.sin_port));
+						TcpCheckIfClientIsMSS(ntohs(clientaddr.sin_port));
 					}
 				}
 				else
