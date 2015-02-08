@@ -20,8 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __TCPCHECK_H__
 #define __TCPCHECK_H__
 
-int TcpCheckIfClientIsMSS(int localPort);
-int TcpCheckTcpLine(int nbLines, char *line, int localPort);
+int TcpCheckIfClientIsMSS(int localPort, uid_t *uid);
+int TcpCheckTcpLine(int nbLines, char *line, int localPort, uid_t *uid);
 int TcpCheckProccesses(unsigned long searchInode);
 
 

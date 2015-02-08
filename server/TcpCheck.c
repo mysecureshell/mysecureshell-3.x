@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <unistd.h>
 #include "TcpCheck.h"
 
-int TcpCheckIfClientIsMSS(int localPort)
+int TcpCheckIfClientIsMSS(int localPort, uid_t *uid)
 {
 	FILE *fh;
 
@@ -40,7 +40,7 @@ int TcpCheckIfClientIsMSS(int localPort)
 
 		while (fgets(line, sizeof(line), fh) != NULL)
 		{
-			if (TcpCheckTcpLine(nbLines, line, localPort) == 1)
+			if (TcpCheckTcpLine(nbLines, line, localPort, uid) == 1)
 				return 1;
 			nbLines++;
 		}
@@ -49,10 +49,10 @@ int TcpCheckIfClientIsMSS(int localPort)
 	return 0;
 }
 
-int TcpCheckTcpLine(int nbLines, char *line, int localPort)
+int TcpCheckTcpLine(int nbLines, char *line, int localPort, uid_t *uid)
 {
 	unsigned long rxq, txq, time_len, retr, inode;
-	int num, local_port, rem_port, d, state, uid, timer_run, timeout;
+	int num, local_port, rem_port, d, state, tuid, timer_run, timeout;
 	char rem_addr[128], local_addr[128], more[512];
 
 	if (nbLines == 0)
@@ -60,7 +60,7 @@ int TcpCheckTcpLine(int nbLines, char *line, int localPort)
 	num = sscanf(line,
 						"%d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %X %lX:%lX %X:%lX %lX %d %d %ld %512s\n",
 						&d, local_addr, &local_port, rem_addr, &rem_port, &state,
-						&txq, &rxq, &timer_run, &time_len, &retr, &uid, &timeout,
+						&txq, &rxq, &timer_run, &time_len, &retr, &tuid, &timeout,
 						&inode, more);
 
 	if (num < 11)
@@ -68,6 +68,7 @@ int TcpCheckTcpLine(int nbLines, char *line, int localPort)
 	else if (local_port == localPort)
 	{
 		printf("-> %s\n", line);
+		*uid = tuid;
 		return TcpCheckProccesses(inode);
 	}
 	return 0;
