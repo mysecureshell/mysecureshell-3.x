@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "CFixes.h"
 #include "TcpCheck.h"
 
 int TcpCheckIfClientIsMSS(int localPort, uid_t *uid)
@@ -44,7 +45,7 @@ int TcpCheckIfClientIsMSS(int localPort, uid_t *uid)
 				return 1;
 			nbLines++;
 		}
-		fclose(fh);
+		xFclose(fh);
 	}
 	return 0;
 }
@@ -78,7 +79,7 @@ int TcpCheckProccesses(unsigned long searchInode)
 {
 	char line[LINE_MAX];
 	int procFdLen, lNameLen, len;
-	char lName[30];
+	char lName[LINE_MAX];
 	long inode;
 	struct dirent *direProc, *direFd;
 	DIR *dirProc = NULL, *dirFd = NULL;

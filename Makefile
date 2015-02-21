@@ -1,6 +1,10 @@
 
 NAME_SRV = MSS_server
-SRC_SRV = server/Main.c server/TcpCheck.c
+SRC_SRV = server/Main.c server/TcpCheck.c server/Sftp.c server/Admin.c server/Buffer.c server/Encode.c \
+		  server/Encoding.c server/FileSystem.c server/FileSystemAcl.c server/Log.c server/Handle.c \
+		  server/SftpWho.c server/Send.c server/Stats.c server/SftpExt.c server/SftpServer.c \
+		  server/Util.c server/GetUsersInfos.c server/Access.c server/CFixes.c \
+		  Core/FileSpec.c Core/string.c
 OBJ_SRV = $(SRC_SRV:.c=.o)
 
 NAME_CLT = MSS_client

@@ -28,51 +28,59 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int main(int ac, char **av)
 {
 	struct sockaddr_in serverAddr;
-	int rc = -1;
-	int sd = -1;
+	fd_set fds;
+	int socketFd = -1;
 	int	status = 0;
 
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	serverAddr.sin_port = htons(PORT);
 	memset(&(serverAddr.sin_zero), '\0', 8);
-	if ((sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	if ((socketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		perror("Client-socket() error");
+		perror("Unable to open socket");
 		status = 1;
-		goto endMain;
 	}
-	if ((rc = connect(sd, (struct sockaddr *)&serverAddr, sizeof(serverAddr))) < 0)
+	else if ((status = connect(socketFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr))) < 0)
 	{
-		perror("Client-connect() error");
+		perror("Unable to connect socket");
 		status = 1;
-		goto endMain;
 	}
-	if (dup2(rc, STDIN_FILENO) == -1)
+	else
 	{
-		perror("Client-dup2-stdin error");
-		status = 2;
-		goto endMain;
+		for (;;)
+		{
+			FD_ZERO(&fds);
+			FD_SET(STDIN_FILENO, &fds);
+			FD_SET(socketFd, &fds);
+			status = select(socketFd + 1, &fds, NULL, NULL, NULL);
+			if (status == -1)
+				break;
+			if (FD_ISSET(STDIN_FILENO, &fds))
+			{
+				char data[4096];
+				ssize_t dataSize;
+
+				dataSize = read(STDIN_FILENO, &data, sizeof(data));
+				if (dataSize > 0)
+					dataSize = write(socketFd, &data, dataSize);
+				else if (dataSize == 0)
+					break;
+			}
+			if (FD_ISSET(socketFd, &fds))
+			{
+				char data[4096];
+				ssize_t dataSize;
+
+				dataSize = read(socketFd, &data, sizeof(data));
+				if (dataSize > 0)
+					dataSize = write(STDOUT_FILENO, &data, dataSize);
+				else if (dataSize == 0)
+					break;
+			}
+		}
 	}
-	if (dup2(rc, STDOUT_FILENO) == -1)
-	{
-		perror("Client-dup2-stdout error");
-		status = 2;
-		goto endMain;
-	}
-	if (dup2(rc, STDERR_FILENO) == -1)
-	{
-		perror("Client-dup2-stderr error");
-		status = 2;
-		goto endMain;
-	}
-	while (sleep(3600) == 0)
-		;
-	fprintf(stderr, "Client-sleep interrupted");
-endMain:
-	if (rc != -1)
-		close(rc);
-	if (sd != -1)
-		close(sd);
+	if (socketFd != -1)
+		close(socketFd);
 	return status;
 }
