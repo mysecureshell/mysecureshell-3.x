@@ -169,3 +169,35 @@ void SftpWhoReleaseStruct(t_sftpwho *currentSession)
 		_sftpglobal = NULL;
 	}
 }
+
+int SftpWhoCountProgramForUid(const char *login)
+{
+	t_sftpwho *who;
+	int i, nb;
+
+	nb = 0;
+	if ((who = SftWhoGetAllStructs()) != NULL)
+	{
+		for (i = 0; i < SFTPWHO_MAXCLIENT; i++)
+			if ((who[i].status & SFTPWHO_STATUS_MASK) != SFTPWHO_EMPTY)
+				if (login == NULL || strcmp(who[i].user, login) == 0)
+					nb++;
+	}
+	return (nb);
+}
+
+int SftpWhoCountProgramForIp(const char *host)
+{
+	t_sftpwho *who;
+	int i, nb;
+
+	nb = 0;
+	if ((who = SftWhoGetAllStructs()) != NULL)
+	{
+		for (i = 0; i < SFTPWHO_MAXCLIENT; i++)
+			if ((who[i].status & SFTPWHO_STATUS_MASK) != SFTPWHO_EMPTY)
+				if (host == NULL || strcmp(who[i].ip, host) == 0)
+					nb++;
+	}
+	return (nb);
+}

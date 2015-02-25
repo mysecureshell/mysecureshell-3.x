@@ -4,11 +4,12 @@ SRC_SRV = server/Main.c server/TcpCheck.c server/Sftp.c server/Admin.c server/Bu
 		  server/Encoding.c server/FileSystem.c server/FileSystemAcl.c server/Log.c server/Handle.c \
 		  server/SftpWho.c server/Send.c server/Stats.c server/SftpExt.c server/SftpServer.c \
 		  server/Util.c server/GetUsersInfos.c server/Access.c server/CFixes.c \
-		  Core/FileSpec.c Core/string.c
+		  server/Config.c server/Hash.c server/FileSpec.c server/Tag.c server/Ip.c \
+		  server/SftpMain.c
 OBJ_SRV = $(SRC_SRV:.c=.o)
 
 NAME_CLT = MSS_client
-SRC_CLT = client/Main.c
+SRC_CLT = client/Main.c server/Config.c server/Hash.c server/CFixes.c server/Tag.c server/FileSpec.c server/Ip.c server/Access.c
 OBJ_CLT = $(SRC_CLT:.c=.o)
 
 

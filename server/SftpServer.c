@@ -27,10 +27,10 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "../Core/FileSpec.h"
 #include "Access.h"
 #include "CFixes.h"
 #include "Encoding.h"
+#include "FileSpec.h"
 #include "FileSystem.h"
 #include "Global.h"
 #include "Handle.h"

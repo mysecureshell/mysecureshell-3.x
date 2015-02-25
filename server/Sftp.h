@@ -275,7 +275,7 @@ typedef struct sGlobal
 
 extern u_int32_t cVersion;
 
-int SftpMain(tGlobal *params, int sftpProtocol, int clientFd);
+int SftpLoop(tGlobal *params, int sftpProtocol, int clientFd);
 void DoInit();
 void DoRealPath();
 void DoOpenDir();

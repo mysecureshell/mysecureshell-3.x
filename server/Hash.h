@@ -1,7 +1,7 @@
 /*
 MySecureShell permit to add restriction to modified sftp-server
 when using MySecureShell as shell.
-Copyright (C) 2007 Sebastien Tardif
+Copyright (C) 2007-2014 MySecureShell Team
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -17,32 +17,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef _CFIXES_H_
-#define _CFIXES_H_
+#ifndef _HASH_H_
+#define _HASH_H_
 
-#include <stdio.h>
+#define MSS_HASH_SIZE	256
 
-void xClose(int fd);
-void xDup2(int oldFd, int newFd);
-void xFclose(FILE *fp);
+typedef struct s_element
+{
+	char *key;
+	char *str;
+	int number;
+	struct s_element *next;
+} t_element;
 
-void xDeleteComments(char *buffer);
-char *xTrimAndCleanComments(char *buffer);
-char *xClean(char *buffer);
-char *xTrimRight(char *buffer);
-char *xTrimLeft(char *buffer);
-void xStrCopy(char *dest, char *src, size_t length);
+typedef struct s_hash
+{
+	t_element *hash[MSS_HASH_SIZE];
+} t_hash;
 
-#ifdef HAVE_STRLCAT
-#define STRCAT(_DST, _SRC, _LEN) strlcat(_DST, _SRC, _LEN)
-#else
-#define STRCAT(_DST, _SRC, _LEN) strcat(_DST, _SRC)
-#endif
+void HashInit();
+void HashDelete();
+int HashKeyExists(const char *key);
+char *HashGet(const char *key);
+int HashGetInt(const char *key);
+void HashSet(const char *key, char *value);
+void HashSetInt(const char *key, int value);
 
-#ifdef HAVE_STRLCPY
-#define STRCPY(_DST, _SRC, _LEN) strlcpy(_DST, _SRC, _LEN)
-#else
-#define STRCPY(_DST, _SRC, _LEN) strcpy(_DST, _SRC)
-#endif
-
-#endif //_CFIXES_H_
+#endif //_HASH_H_

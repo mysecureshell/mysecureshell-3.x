@@ -25,8 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../Core/FileSpec.h"
 #include "Access.h"
+#include "FileSpec.h"
 #include "FileSystem.h"
 #include "Global.h"
 #include "Sftp.h"

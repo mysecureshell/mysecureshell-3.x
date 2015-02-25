@@ -16,10 +16,12 @@
 #define LINE_MAX 4096
 #define PORT 2020
 
+#define PACKAGE_VERSION "xxx"
 #define DODEBUG 1
 #define MSS_HAVE_ADMIN 1
 #define SHUTDOWN_FILE "/tmp/sftp.shut"
 #define CONFIG_FILE "/etc/ssh/sftp_config"
+#define CONFIG_FILE2 "/etc/sshd/sftp_config"
 #define MSS_LOG "/tmp/sftp.log"
 #define MSS_SFTPWHO "/bin/ls"
 #define MSS_SFTPUSER "/bin/ls"

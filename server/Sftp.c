@@ -60,7 +60,6 @@
 #include "SftpWho.h"
 #include "Util.h"
 #include "CFixes.h"
-#include "../Core/string.h"
 
 #define CONN_INIT	0
 #define CONN_SFTP	1
@@ -427,7 +426,7 @@ void DoRead()
 				for (len = 0; (len + 1) < ret; len++)
 					if (buf[len] == '\r' && buf[len + 1] == '\n')
 					{
-						MyStrCopy(buf + len, buf + len + 1, ret - len - 1);
+						xStrCopy(buf + len, buf + len + 1, ret - len - 1);
 						ret--;
 					}
 			}
@@ -482,7 +481,7 @@ void DoWrite()
 				for (dec = 0; (dec + 1) < len; dec++)
 					if (data[dec] == '\r' && data[dec + 1] == '\n')
 					{
-						MyStrCopy(data + dec, data + dec + 1, len - dec - 1);
+						xStrCopy(data + dec, data + dec + 1, len - dec - 1);
 						len--;
 					}
 			}
@@ -1016,7 +1015,7 @@ void DoSFTPProtocol()
 	goto parsePacket;
 }
 
-int SftpMain(tGlobal *params, int sftpProtocol, int clientFd)
+int SftpLoop(tGlobal *params, int sftpProtocol, int clientFd)
 {
 	struct timeval tm;
 	long long tmLast, tmCur, tmNeeded;
